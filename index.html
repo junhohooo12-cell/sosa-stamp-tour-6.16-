@@ -429,7 +429,16 @@
     <p id="space-username">어서오세요!</p>
   </div>
   <div class="section-body">
-    <div class="section-title">🏄 공간 체험</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="section-title" style="margin:0">🏄 공간 체험</div>
+      <button onclick="toggleSpaceNotice()" id="space-notice-btn" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:20px;background:linear-gradient(135deg,#FF6B6B,#FF8E53);color:#fff;font-size:.78rem;font-weight:800;font-family:var(--font);cursor:pointer">📢 공지 <span id="space-notice-arrow">▼</span></button>
+    </div>
+    <div id="space-notice-panel" style="display:none;margin-bottom:12px;border-radius:18px;overflow:hidden;border:2px solid #FFD6C8;animation:fadeUp .3s ease both">
+      <div style="background:linear-gradient(135deg,#FFF0E8,#FFE8E0);padding:16px">
+        <div style="font-size:.9rem;font-weight:800;color:var(--c-primary);margin-bottom:8px">📢 공간 이용 안내</div>
+        <div id="space-notice-content" style="font-size:.84rem;color:var(--c-sub);line-height:1.8">공지사항이 없습니다.</div>
+      </div>
+    </div>
     <div id="space-grid" class="space-grid">
       <div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--c-sub);font-size:.9rem">⏳ 불러오는 중...</div>
     </div>
@@ -496,16 +505,10 @@
       <div class="step-badge">✅ QR 인증 완료! 이용 정보를 입력해주세요</div>
       <div id="lab-section" style="display:none;margin-bottom:18px">
         <div style="font-size:.88rem;font-weight:800;color:var(--c-text);margin-bottom:10px">🧩 활동 유형 선택 *</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <label id="lab-regular" onclick="selectLab('상시체험')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2.5px solid var(--c-border);border-radius:14px;cursor:pointer;background:#FAFAFA;transition:all .2s">
-            <span style="font-size:1.6rem">🎨</span>
-            <div><div style="font-size:.92rem;font-weight:800;color:var(--c-text)">상시체험</div><div style="font-size:.75rem;color:var(--c-sub);margin-top:2px">자유 3D펜 · 드론 체험</div></div>
-          </label>
-          <label id="lab-planned" onclick="selectLab('기획활동')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2.5px solid var(--c-border);border-radius:14px;cursor:pointer;background:#FAFAFA;transition:all .2s">
-            <span style="font-size:1.6rem">🚨</span>
-            <div><div style="font-size:.92rem;font-weight:800;color:var(--c-text)">기획활동</div><div style="font-size:.75rem;color:var(--c-sub);margin-top:2px">태극기 자석 만들기 등</div></div>
-          </label>
-        </div>
+        <button onclick="showLabTypeModal(selSpace?.space_id)" style="width:100%;padding:14px;background:linear-gradient(135deg,#E0FFFE,#B2F5EA);border:2px solid #80DEEA;border-radius:14px;font-size:.92rem;font-weight:700;font-family:var(--font);cursor:pointer;color:#00838F;text-align:left;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.4rem">🧩</span> 활동 유형을 선택해주세요
+        </button>
+        <div id="lab-selected-display" style="display:none;margin-top:8px;padding:10px 14px;background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border-radius:12px;font-size:.88rem;font-weight:700;color:#43A047"></div>
         <div style="height:1px;background:var(--c-border);margin:16px 0"></div>
       </div>
       <div class="input-group">
@@ -557,6 +560,12 @@
     <div class="card" style="margin:0 0 16px">
       <div class="section-title">📋 최근 이용 내역</div>
       <div id="history-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <div class="card" style="margin:0 0 16px">
+      <div class="section-title">🏆 이달의 방문 랭킹 <span style="font-size:.72rem;color:var(--c-sub);font-weight:600">(이름 가운데 *처리)</span></div>
+      <div id="monthly-rank-list">
+        <p style="color:var(--c-sub);text-align:center;font-size:.85rem;padding:12px">불러오는 중...</p>
+      </div>
     </div>
     <button class="btn btn-primary" onclick="goScreen('s-space')" style="margin:0 16px;width:calc(100% - 32px)">🗺️ 다른 공간 체험하기</button>
     <button class="btn btn-secondary" onclick="doLogout()" style="margin:10px 16px 0;width:calc(100% - 32px)">🚪 로그아웃</button>
@@ -667,8 +676,13 @@
           <span class="goal-current"><span id="goal-current">0</span> / <span id="goal-target">0</span> 명</span>
           <span class="goal-pct"><span id="goal-pct">0</span>%</span>
         </div>
-        <div id="last-year-box" style="display:none;margin-top:12px;padding:10px;background:#F5F6FF;border-radius:10px;font-size:.82rem;color:#7986CB;font-weight:600">
-          📅 작년(<span id="last-year-label"></span>) 연간 실적: <span id="last-year-val" style="color:#3949AB;font-weight:800"></span>명
+        <div id="last-year-box" style="display:none;margin-top:12px;padding:10px;background:#E0F7FA;border-radius:10px;font-size:.82rem;color:#00838F;font-weight:600">
+          📅 작년(<span id="last-year-label"></span>) 연간 실적: <span id="last-year-val" style="color:#00838F;font-weight:800"></span>명
+        </div>
+        <!-- 공간별 목표 미니 표시 (전체 탭일 때만) -->
+        <div id="space-goal-mini" style="display:none;margin-top:12px;border-top:1.5px solid #B2EBF2;padding-top:12px">
+          <div style="font-size:.78rem;font-weight:800;color:#00838F;margin-bottom:8px">🏠 공간별 월 목표</div>
+          <div id="space-goal-mini-list"></div>
         </div>
       </div>
 
@@ -680,9 +694,14 @@
         <button class="admin-tab-btn" id="atab-edit" onclick="switchAdminTab('edit')">✏️ 편집</button>
       </div>
 
-      <!-- 공간 탭 (월간/일별 공통) -->
+      <!-- 공간 탭 (고정) -->
       <div id="space-tab-row" class="space-tab-scroll">
         <button class="space-tab-chip active" onclick="selectSpaceTab('전체')">🏠 전체</button>
+        <button class="space-tab-chip" onclick="selectSpaceTab('1층 소원나무공방')">🔨 소원나무공방</button>
+        <button class="space-tab-chip" onclick="selectSpaceTab('상상아울LAB')">🧩 상상아울LAB</button>
+        <button class="space-tab-chip" onclick="selectSpaceTab('2층 우드샷슝')">🏏 우드샷슝</button>
+        <button class="space-tab-chip" onclick="selectSpaceTab('코인노래방')">🎤 코인노래방</button>
+        <button class="space-tab-chip" onclick="selectSpaceTab('따르릉북카페')">📚 따르릉북카페</button>
       </div>
 
       <!-- 월간 요약 패널 -->
@@ -723,6 +742,18 @@
           <div style="font-size:.82rem;font-weight:800;color:#00838F;margin-bottom:8px;padding-left:2px">🏠 공간별 방문 현황 <span style="font-size:.72rem;color:#80CBC4;font-weight:600">(탭하면 해당 공간 통계로 이동)</span></div>
           <div id="space-summary-list"></div>
         </div>
+        <!-- 공간 선택 시: 공간별 목표 카드 -->
+        <div id="space-goal-card" style="display:none;background:linear-gradient(135deg,#E0F7FA,#B2EBF2);border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #80DEEA">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:.85rem;font-weight:800;color:#00838F">🎯 <span id="sg-space-name">공간</span> 월 목표</div>
+            <button onclick="openSpaceGoalModal()" style="padding:5px 12px;background:linear-gradient(135deg,#00838F,#00ACC1);color:#fff;border:none;border-radius:20px;font-size:.75rem;font-weight:700;font-family:var(--font);cursor:pointer">⚙️ 설정</button>
+          </div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="sg-bar" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;margin-top:6px">
+            <span style="color:#00838F"><span id="sg-current">0</span> / <span id="sg-target">미설정</span> 명</span>
+            <span style="color:#26C6DA"><span id="sg-pct">0</span>%</span>
+          </div>
+        </div>
         <button class="dl-btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
       </div>
 
@@ -750,16 +781,46 @@
 
       <!-- 편집 패널 -->
       <div id="panel-edit" style="display:none">
+        <!-- 공지사항 편집 -->
+        <div class="admin-section">
+          <div class="admin-section-title">📢 공지사항 관리</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:.8rem;font-weight:700;color:#4DD0E1;margin-bottom:6px">🏄 공간 체험 공지</div>
+            <textarea class="admin-input" id="notice-space-text" placeholder="공간 체험 공지 내용 입력" style="height:80px;resize:none"></textarea>
+            <button onclick="saveNotice('space')" class="admin-save-btn" style="margin-top:6px;width:100%">저장</button>
+          </div>
+          <div>
+            <div style="font-size:.8rem;font-weight:700;color:#4DD0E1;margin-bottom:6px">🎯 이벤트 공지</div>
+            <textarea class="admin-input" id="notice-event-text" placeholder="이벤트 공지 내용 입력" style="height:80px;resize:none"></textarea>
+            <button onclick="saveNotice('event')" class="admin-save-btn" style="margin-top:6px;width:100%">저장</button>
+          </div>
+        </div>
         <!-- 공간 편집 -->
         <div class="admin-section">
           <div class="admin-section-title">🏠 공간 관리</div>
           <div id="admin-space-list"></div>
-          <button onclick="addNewSpace()" style="width:100%;padding:12px;border:2px dashed #C5CAE9;border-radius:12px;background:transparent;color:#7986CB;font-size:.85rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:4px">+ 공간 추가</button>
+          <button onclick="addNewSpace()" style="width:100%;padding:12px;border:2px dashed #80DEEA;border-radius:12px;background:transparent;color:#00838F;font-size:.85rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:4px">+ 공간 추가</button>
         </div>
         <!-- 이벤트 편집 -->
         <div class="admin-section">
           <div class="admin-section-title">🎯 이벤트 공간 관리</div>
           <div id="admin-event-list"></div>
+        </div>
+        <!-- 랭킹 관리 -->
+        <div class="admin-section">
+          <div class="admin-section-title">🏆 이벤트 랭킹 관리</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <button onclick="openRankingAdmin('2층 우드샷슝')" style="padding:8px 14px;background:linear-gradient(135deg,#FF8E53,#FF6B6B);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;font-family:var(--font);cursor:pointer">🏏 우드샷슝</button>
+            <button onclick="openRankingAdmin('코인노래방')" style="padding:8px 14px;background:linear-gradient(135deg,#FF6B6B,#E91E63);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;font-family:var(--font);cursor:pointer">🎤 코인노래방</button>
+            <button onclick="openRankingAdmin('따르릉북카페')" style="padding:8px 14px;background:linear-gradient(135deg,#3DD9C2,#00ACC1);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📚 따르릉북카페</button>
+          </div>
+          <div id="admin-ranking-panel" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div id="admin-ranking-title" style="font-size:.9rem;font-weight:800;color:#00838F"></div>
+              <button onclick="resetRanking()" style="padding:6px 12px;background:linear-gradient(135deg,#FF6B6B,#E53935);color:#fff;border:none;border-radius:8px;font-size:.75rem;font-weight:700;font-family:var(--font);cursor:pointer">🗑 전체 초기화</button>
+            </div>
+            <div id="admin-ranking-list"></div>
+          </div>
         </div>
       </div>
 
@@ -782,13 +843,49 @@
   </div>
 </div>
 
-<!-- 목표 설정 모달 -->
+<!-- 목표 설정 모달 (전체) -->
 <div id="goal-modal" class="modal-bg">
   <div class="modal-box">
-    <h3 style="font-size:1.05rem;font-weight:800;color:#3949AB;margin-bottom:16px">🎯 연간 목표 설정</h3>
+    <h3 style="font-size:1.05rem;font-weight:800;color:#00838F;margin-bottom:16px">🎯 연간 목표 설정</h3>
     <div class="input-group"><label id="goal-modal-year-label">2026년 목표 인원</label><input id="goal-input" type="number" min="1" placeholder="목표 인원 입력" style="font-size:1.2rem;font-weight:700;text-align:center" /></div>
-    <button onclick="saveGoal()" style="width:100%;padding:14px;background:linear-gradient(135deg,#3949AB,#5C6BC0);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:10px">저장</button>
-    <button onclick="document.getElementById('goal-modal').classList.remove('show')" style="width:100%;padding:12px;background:#E8EAF6;color:#7986CB;border:none;border-radius:14px;font-size:.9rem;font-weight:700;font-family:var(--font);cursor:pointer">취소</button>
+    <button onclick="saveGoal()" style="width:100%;padding:14px;background:linear-gradient(135deg,#00838F,#00ACC1);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:10px">저장</button>
+    <button onclick="document.getElementById('goal-modal').classList.remove('show')" style="width:100%;padding:12px;background:#E0F7FA;color:#00838F;border:none;border-radius:14px;font-size:.9rem;font-weight:700;font-family:var(--font);cursor:pointer">취소</button>
+  </div>
+</div>
+
+<!-- 공간별 월 목표 설정 모달 -->
+<div id="space-goal-modal" class="modal-bg">
+  <div class="modal-box">
+    <h3 style="font-size:1.05rem;font-weight:800;color:#00838F;margin-bottom:4px">🏠 공간별 월 목표 설정</h3>
+    <p id="space-goal-modal-name" style="font-size:.85rem;color:#4DD0E1;font-weight:700;margin-bottom:16px"></p>
+    <div class="input-group"><label id="space-goal-modal-label">월 목표 인원</label><input id="space-goal-input" type="number" min="1" placeholder="목표 인원 입력" style="font-size:1.2rem;font-weight:700;text-align:center" /></div>
+    <button onclick="saveSpaceGoal()" style="width:100%;padding:14px;background:linear-gradient(135deg,#00838F,#00ACC1);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:10px">저장</button>
+    <button onclick="document.getElementById('space-goal-modal').classList.remove('show')" style="width:100%;padding:12px;background:#E0F7FA;color:#00838F;border:none;border-radius:14px;font-size:.9rem;font-weight:700;font-family:var(--font);cursor:pointer">취소</button>
+  </div>
+</div>
+
+<!-- 랭킹 수정 모달 -->
+<div id="rank-edit-modal" class="modal-bg">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:1rem;font-weight:800;color:#00838F">✏️ 랭킹 수정</h3>
+      <button onclick="document.getElementById('rank-edit-modal').classList.remove('show')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--c-sub)">×</button>
+    </div>
+    <input type="hidden" id="rank-edit-id" />
+    <div class="input-group"><label>이름</label><input id="rank-edit-name" type="text" /></div>
+    <div class="input-group"><label>점수 / 보드게임명</label><input id="rank-edit-score" type="text" /></div>
+    <div class="input-group"><label>메모</label><input id="rank-edit-memo" type="text" /></div>
+    <button onclick="saveRankEdit()" style="width:100%;padding:13px;background:linear-gradient(135deg,#00838F,#00ACC1);color:#fff;border:none;border-radius:13px;font-size:.95rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:8px">저장</button>
+    <button onclick="deleteRankEntry()" style="width:100%;padding:12px;background:linear-gradient(135deg,#FFCDD2,#FFEBEE);color:#C62828;border:none;border-radius:13px;font-size:.9rem;font-weight:700;font-family:var(--font);cursor:pointer">이 항목 삭제</button>
+  </div>
+</div>
+
+<!-- 상상아울LAB 활동유형 선택 (동적 로드) -->
+<div id="lab-type-modal" class="modal-bg">
+  <div class="modal-box">
+    <h3 style="font-size:1rem;font-weight:800;color:var(--c-text);margin-bottom:16px">🧩 활동 유형 선택</h3>
+    <div id="lab-type-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <button onclick="document.getElementById('lab-type-modal').classList.remove('show')" style="width:100%;padding:12px;background:#FFE4D6;color:var(--c-primary);border:none;border-radius:13px;font-size:.9rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:12px">취소</button>
   </div>
 </div>
 
@@ -938,6 +1035,7 @@ function enterAdmin(){
   goScreen('s-admin');
   loadAdminStats();
   loadAdminSpaces();
+  loadNoticeEditors();
 }
 function exitAdmin(){goScreen('s-auth');}
 
@@ -952,26 +1050,28 @@ async function loadSpaces(){
     spacesData=data||[];
     renderSpaces(spacesData);
     document.getElementById('space-username').textContent='👋 '+member.name+'님, 안녕하세요!';
+    loadNotices();
     goScreen('s-space');
   }catch(e){toast('❌ 공간 목록 오류: '+e.message);}
   finally{loading(false);}
 }
 function renderSpaces(spaces){
-  const grid=document.getElementById('space-grid');
   const normalSpaces=spaces.filter(s=>!EVENT_SPACES.includes(s.space_name));
   const eventSpaces=spaces.filter(s=>EVENT_SPACES.includes(s.space_name));
-  grid.innerHTML=!spaces.length?'<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--c-sub)">등록된 공간이 없습니다</div>':
-    spaces.map((sp,i)=>{
+  const grid=document.getElementById('space-grid');
+  grid.innerHTML=!normalSpaces.length?'<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--c-sub)">등록된 공간이 없습니다</div>':
+    normalSpaces.map((sp,i)=>{
       const em=spaceEmoji(sp.space_name,i);
       const thumb=sp.image_url?`<div class="space-thumb"><img src="${sp.image_url}" alt="${sp.space_name}" onerror="this.parentElement.innerHTML='${em}'" /></div>`:`<div class="space-thumb">${em}</div>`;
-      return`<div class="space-card" id="card-${sp.space_id}" onclick="selectSpace('${sp.space_id}')">${thumb}<div class="space-info"><h3>${sp.space_name}</h3>${sp.intro_url?`<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();window.open('${sp.intro_url}','_blank')" style="margin-top:6px;font-size:.72rem;padding:4px 10px">📖 소개</button>`:''}</div></div>`;
+      const descHtml=sp.description?`<p style="font-size:.72rem;color:var(--c-sub);margin-top:4px;line-height:1.5">${sp.description}</p>`:'';
+      return`<div class="space-card" id="card-${sp.space_id}" onclick="selectSpace('${sp.space_id}')">${thumb}<div class="space-info"><h3>${sp.space_name}</h3>${descHtml}${sp.intro_url?`<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();window.open('${sp.intro_url}','_blank')" style="margin-top:6px;font-size:.72rem;padding:4px 10px">📖 소개</button>`:''}</div></div>`;
     }).join('');
   const eg=document.getElementById('event-grid');
-  eg.innerHTML=!eventSpaces.length?'<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--c-sub);font-size:.85rem">이벤트 공간이 없습니다</div>':
+  eg.innerHTML=!eventSpaces.length?'<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--c-sub);font-size:.85rem">진행 중인 이벤트가 없습니다</div>':
     eventSpaces.map((sp,i)=>{
       const em=spaceEmoji(sp.space_name,i);
       const thumb=sp.image_url?`<div class="space-thumb"><img src="${sp.image_url}" alt="${sp.space_name}" onerror="this.parentElement.innerHTML='${em}'" /></div>`:`<div class="space-thumb" style="background:linear-gradient(135deg,#FFCCBC,#FF8A65)">${em}</div>`;
-      return`<div class="space-card" style="border-color:#FF8A65;cursor:pointer" onclick="viewRanking('${sp.space_id}')"><span class="event-badge">🏆 이벤트</span>${thumb}<div class="space-info"><h3>${sp.space_name}</h3><span style="font-size:.75rem;color:#FF7043;font-weight:700">👆 탭하면 랭킹 확인</span></div></div>`;
+      return`<div class="space-card" style="border-color:#FF8A65;cursor:pointer" onclick="viewRanking('${sp.space_id}')"><span class="event-badge">🏆 이벤트</span>${thumb}<div class="space-info"><h3>${sp.space_name}</h3>${sp.description?`<p style="font-size:.72rem;color:#FF7043;margin-top:3px;line-height:1.4">${sp.description}</p>`:''}<span style="font-size:.75rem;color:#FF7043;font-weight:700">👆 탭하면 랭킹 확인</span></div></div>`;
     }).join('');
 }
 
@@ -1051,7 +1151,8 @@ function goToInfo(){
   document.getElementById('info-space-name').textContent='📍 '+selSpace.space_name;
   const isLab=selSpace.space_name==='상상아울LAB';
   document.getElementById('lab-section').style.display=isLab?'block':'none';
-  labActivity='';if(isLab)resetLabUI();
+  labActivity='';
+  if(isLab){const d=document.getElementById('lab-selected-display');if(d){d.style.display='none';d.textContent='';}}  
   resetCounts();goScreen('s-info');
 }
 const labActiveStyle='display:flex;align-items:center;gap:12px;padding:14px 16px;border:2.5px solid var(--c-primary);border-radius:14px;cursor:pointer;background:rgba(249,168,37,.08);transition:all .2s';
@@ -1111,7 +1212,7 @@ async function loadResult(spaceName){
     sg.innerHTML=Object.entries(spaceCount).map(([n,c],i)=>`<div class="stamp-item" style="animation-delay:${i*.08}s"><span style="font-size:1.8rem">${spaceEmoji(n,i)}</span><span style="font-size:.72rem;font-weight:700;color:var(--c-sub);text-align:center">${n}</span><span style="font-size:.78rem;font-weight:800;color:var(--c-primary);background:rgba(249,168,37,.15);padding:2px 8px;border-radius:20px">${c}회</span></div>`).join('');
     const hl=document.getElementById('history-list');
     hl.innerHTML=(history||[]).slice(0,5).map((h,i)=>`<div class="history-item"><div class="history-icon">${spaceEmoji(h.space_name,i)}</div><div style="flex:1;min-width:0"><div style="font-size:.88rem;font-weight:700;color:var(--c-text)">${h.space_name}</div><div style="font-size:.75rem;color:var(--c-sub);margin-top:2px">🕐 ${h.created_at?.slice(0,16).replace('T',' ')||'-'}</div></div>${h.qr_verified?'<span style="padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:600;background:#E8F5E9;color:#43A047">✅ QR</span>':''}</div>`).join('');
-    goScreen('s-result');confetti();
+    goScreen('s-result');confetti();loadMonthlyRanking(member.memberId);
   }catch(e){loading(false);toast('⚠️ '+e.message);goScreen('s-result');}
 }
 
@@ -1147,7 +1248,7 @@ async function loadRanking(spaceName,myScore,myRank){
     else myBox.style.display='none';
     const medals=['🥇','🥈','🥉'];
     document.getElementById('rank-list').innerHTML=!data?.length?'<p style="color:var(--c-sub);text-align:center;padding:20px">아직 등록된 점수가 없어요</p>':
-      data.map((r,i)=>`<div class="rank-item ${i<3?'r'+(i+1):''}" style="animation-delay:${i*.06}s"><div class="rank-badge ${i<3?'r'+(i+1):''}">${i<3?medals[i]:i+1}</div><div style="flex:1;min-width:0"><div style="font-size:.9rem;font-weight:700;color:var(--c-text)">${r.member_name}</div><div style="font-size:.75rem;color:var(--c-sub);margin-top:2px">${r.created_at?.slice(0,10)||''}</div></div><div style="font-size:1.3rem;font-weight:900;color:var(--c-primary)">${selSpace?.space_name===BOOKCAFE?r.score:Number(r.score).toLocaleString()+'점'}</div></div>`).join('');
+      data.map((r,i)=>`<div class="rank-item ${i<3?'r'+(i+1):''}" style="animation-delay:${i*.06}s"><div class="rank-badge ${i<3?'r'+(i+1):''}">${i<3?medals[i]:i+1}</div><div style="flex:1;min-width:0"><div style="font-size:.9rem;font-weight:700;color:var(--c-text)">${maskName(r.member_name)}</div><div style="font-size:.75rem;color:var(--c-sub);margin-top:2px">${r.created_at?.slice(0,10)||''}</div></div><div style="font-size:1.3rem;font-weight:900;color:var(--c-primary)">${selSpace?.space_name===BOOKCAFE?r.score:Number(r.score).toLocaleString()+'점'}</div></div>`).join('');
     goScreen('s-ranking');
   }catch(e){toast('❌ 랭킹 오류: '+e.message);}
   finally{loading(false);}
@@ -1220,13 +1321,11 @@ async function loadAdminStats(){
 }
 
 function renderSpaceTabs(data){
+  // 고정 탭 사용 - 탭 재생성 없이 활성 상태만 초기화
   adminSpaceFilter='전체';
-  const names=['전체',...new Set(data.map(r=>r.space_name).filter(Boolean))];
-  const row=document.getElementById('space-tab-row');
-  row.innerHTML=names.map(n=>{
-    const em=n==='전체'?'🏠':spaceEmoji(n);
-    return`<button class="space-tab-chip${n==='전체'?' active':''}" onclick="selectSpaceTab('${n}')">${em} ${n}</button>`;
-  }).join('');
+  document.querySelectorAll('.space-tab-chip').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('onclick')===`selectSpaceTab('전체')`);
+  });
 }
 
 function selectSpaceTab(name){
@@ -1234,7 +1333,10 @@ function selectSpaceTab(name){
   document.querySelectorAll('.space-tab-chip').forEach(b=>{
     b.classList.toggle('active', b.getAttribute('onclick')===`selectSpaceTab('${name}')`);
   });
-  const filtered=name==='전체'?adminStatsData:adminStatsData.filter(r=>r.space_name===name);
+  const filtered=name==='전체'?adminStatsData:adminStatsData.filter(r=>{
+    // 상상아울LAB의 경우 "상상아울LAB - 상시체험" 등도 포함
+    return r.space_name===name || r.space_name?.startsWith(name+' - ');
+  });
   renderMonthlyStats(filtered,name);
   if(document.getElementById('panel-daily').style.display!=='none')renderDailyStats(filtered,name);
 }
@@ -1276,33 +1378,93 @@ function renderMonthlyStats(data,spaceName){
   const summaryList=document.getElementById('space-summary-list');
   if(!summaryWrap||!summaryList)return;
 
+  const spaceGoalCard=document.getElementById('space-goal-card');
+
   if(spaceName==='전체'){
+    // 공간별 소계 목록
     const spaceMap={};
     data.forEach(r=>{
       if(!r.space_name)return;
-      if(!spaceMap[r.space_name])spaceMap[r.space_name]={total:0,male:0,female:0};
-      spaceMap[r.space_name].total+=(r.headcount||0);
-      spaceMap[r.space_name].male+=(r.male_count||0);
-      spaceMap[r.space_name].female+=(r.female_count||0);
+      // 상상아울LAB - 상시체험 등을 상상아울LAB으로 그룹핑
+      const baseName=r.space_name.includes(' - ')?r.space_name.split(' - ')[0]:r.space_name;
+      if(!spaceMap[baseName])spaceMap[baseName]={total:0,male:0,female:0};
+      spaceMap[baseName].total+=(r.headcount||0);
+      spaceMap[baseName].male+=(r.male_count||0);
+      spaceMap[baseName].female+=(r.female_count||0);
     });
-    const entries=Object.entries(spaceMap).sort((a,b)=>b[1].total-a[1].total);
-    summaryList.innerHTML=entries.length===0
-      ?'<p style="color:#9FA8DA;text-align:center;padding:16px;font-size:.85rem">이번 달 이용 기록이 없습니다</p>'
-      :entries.map(([n,v])=>`
-        <div onclick="selectSpaceTab('${n}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border-radius:13px;margin-bottom:8px;border:1.5px solid #B2EBF2;cursor:pointer;transition:all .18s" onmouseover="this.style.background='#E0F7FA'" onmouseout="this.style.background='#fff'">
-          <div style="display:flex;align-items:center;gap:9px">
-            <span style="font-size:1.3rem">${spaceEmoji(n)}</span>
-            <span style="font-size:.88rem;font-weight:800;color:#00838F">${n}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <span style="font-size:.75rem;color:#4DD0E1;font-weight:600">👦 ${v.male} &nbsp; 👧 ${v.female}</span>
-            <span style="font-size:1.05rem;font-weight:900;color:#00838F">${v.total}<span style="font-size:.72rem;margin-left:2px">명</span></span>
-          </div>
-        </div>`).join('');
+    const FIXED_SPACES=['1층 소원나무공방','상상아울LAB','2층 우드샷슝','코인노래방','따르릉북카페'];
+    summaryList.innerHTML=FIXED_SPACES.map(n=>{
+      const v=spaceMap[n]||{total:0,male:0,female:0};
+      return`<div onclick="selectSpaceTab('${n}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border-radius:13px;margin-bottom:8px;border:1.5px solid #B2EBF2;cursor:pointer;transition:background .18s" onmouseover="this.style.background='#E0F7FA'" onmouseout="this.style.background='#fff'">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-size:1.3rem">${spaceEmoji(n)}</span>
+          <span style="font-size:.88rem;font-weight:800;color:#00838F">${n}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:.75rem;color:#4DD0E1;font-weight:600">👦 ${v.male} &nbsp; 👧 ${v.female}</span>
+          <span style="font-size:1.05rem;font-weight:900;color:${v.total>0?'#00838F':'#B2EBF2'}">${v.total}<span style="font-size:.72rem;margin-left:2px">명</span></span>
+        </div>
+      </div>`;
+    }).join('');
     summaryWrap.style.display='block';
+    if(spaceGoalCard)spaceGoalCard.style.display='none';
   }else{
     summaryWrap.style.display='none';
+    // 공간별 목표 카드 표시
+    if(spaceGoalCard){
+      spaceGoalCard.style.display='block';
+      document.getElementById('sg-space-name').textContent=spaceName;
+      loadSpaceGoal(spaceName, total);
+    }
   }
+}
+
+// ── 공간별 월 목표 로드 ──
+async function loadSpaceGoal(spaceName, current){
+  const month=adminCurrentMonth;
+  const key='space_goal_'+spaceName+'_'+month;
+  try{
+    const{data}=await sb.from('admin_settings').select('value').eq('key',key).single();
+    const target=parseInt(data?.value||0);
+    document.getElementById('sg-current').textContent=current;
+    document.getElementById('sg-target').textContent=target||'미설정';
+    const pct=target>0?Math.min(Math.round(current/target*100),100):0;
+    document.getElementById('sg-pct').textContent=pct;
+    document.getElementById('sg-bar').style.width=pct+'%';
+  }catch(e){
+    document.getElementById('sg-target').textContent='미설정';
+    document.getElementById('sg-pct').textContent=0;
+    document.getElementById('sg-bar').style.width='0%';
+  }
+}
+
+// ── 공간별 목표 모달 열기 ──
+function openSpaceGoalModal(){
+  const spaceName=adminSpaceFilter;
+  const month=adminCurrentMonth;
+  document.getElementById('space-goal-modal-name').textContent=spaceEmoji(spaceName)+' '+spaceName;
+  document.getElementById('space-goal-modal-label').textContent=month.replace('-','년 ')+'월 목표 인원';
+  const cur=document.getElementById('sg-target').textContent;
+  document.getElementById('space-goal-input').value=(cur==='미설정'||cur==='0')?'':cur;
+  document.getElementById('space-goal-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('space-goal-input').focus(),300);
+}
+
+// ── 공간별 목표 저장 ──
+async function saveSpaceGoal(){
+  const val=parseInt(document.getElementById('space-goal-input').value);
+  if(!val||val<1){toast('⚠️ 목표 인원을 입력해주세요');return;}
+  const key='space_goal_'+adminSpaceFilter+'_'+adminCurrentMonth;
+  loading(true);
+  try{
+    await sb.from('admin_settings').upsert({key,value:String(val)},{onConflict:'key'});
+    document.getElementById('space-goal-modal').classList.remove('show');
+    toast('✅ 목표가 저장되었습니다');
+    const filtered=adminStatsData.filter(r=>r.space_name===adminSpaceFilter||r.space_name?.startsWith(adminSpaceFilter+' - '));
+    const current=filtered.reduce((s,r)=>s+(r.headcount||0),0);
+    await loadSpaceGoal(adminSpaceFilter, current);
+  }catch(e){toast('❌ 저장 오류: '+e.message);}
+  finally{loading(false);}
 }
 
 function renderDailyStats(data,spaceName){
@@ -1410,7 +1572,7 @@ function switchAdminTab(tab){
   document.getElementById('space-tab-row').style.display=showSpaceTabs?'flex':'none';
   if(tab==='daily')renderDailyStats(adminSpaceFilter==='전체'?adminStatsData:adminStatsData.filter(r=>r.space_name===adminSpaceFilter),adminSpaceFilter);
   if(tab==='compare')loadCompareStats(adminCurrentMonth);
-  if(tab==='edit')loadAdminSpaces();
+  if(tab==='edit'){loadAdminSpaces();loadNoticeEditors();}
 }
 
 // =============================================
@@ -1572,6 +1734,217 @@ function addStatSheet(wb,data,sheetName,month){
 // =============================================
 // admin_settings 테이블 자동 생성 체크 (없으면 에러만)
 // =============================================
+
+// ═══════════════════════════════════════
+// 이름 마스킹 (김준호 → 김*호)
+// ═══════════════════════════════════════
+function maskName(name){
+  if(!name||name.length<2)return name||'?';
+  if(name.length===2)return name[0]+'*';
+  return name[0]+'*'.repeat(name.length-2)+name[name.length-1];
+}
+
+// ═══════════════════════════════════════
+// 공간 공지 토글
+// ═══════════════════════════════════════
+function toggleSpaceNotice(){
+  const p=document.getElementById('space-notice-panel');
+  const a=document.getElementById('space-notice-arrow');
+  const open=p.style.display!=='none';
+  p.style.display=open?'none':'block';
+  a.textContent=open?'▼':'▲';
+}
+
+// ═══════════════════════════════════════
+// 공지 로드 (앱 시작 시)
+// ═══════════════════════════════════════
+async function loadNotices(){
+  try{
+    const{data}=await sb.from('admin_settings').select('key,value').in('key',['notice_space','notice_event']);
+    (data||[]).forEach(r=>{
+      if(r.key==='notice_space'){
+        const el=document.getElementById('space-notice-content');
+        if(el)el.innerHTML=r.value.replace(/\n/g,'<br>');
+      }
+      if(r.key==='notice_event'){
+        const el=document.getElementById('notice-panel');
+        if(el){
+          el.innerHTML=`<div style="background:linear-gradient(135deg,#E0FFFE,#E0F7FA);padding:16px">
+            <div style="font-size:.9rem;font-weight:800;color:#00838F;margin-bottom:10px">📢 이벤트 참여 방법</div>
+            <div style="font-size:.84rem;color:#00838F;line-height:1.8">${r.value.replace(/\n/g,'<br>')}</div>
+          </div>`;
+        }
+      }
+    });
+  }catch(e){}
+}
+
+// 공지 편집 탭 열 때 현재 값 로드
+async function loadNoticeEditors(){
+  try{
+    const{data}=await sb.from('admin_settings').select('key,value').in('key',['notice_space','notice_event']);
+    (data||[]).forEach(r=>{
+      if(r.key==='notice_space'){const el=document.getElementById('notice-space-text');if(el)el.value=r.value;}
+      if(r.key==='notice_event'){const el=document.getElementById('notice-event-text');if(el)el.value=r.value;}
+    });
+  }catch(e){}
+}
+
+async function saveNotice(type){
+  const key='notice_'+type;
+  const val=document.getElementById('notice-'+type+'-text')?.value||'';
+  loading(true);
+  try{
+    await sb.from('admin_settings').upsert({key,value:val},{onConflict:'key'});
+    toast('✅ 공지가 저장되었습니다');
+    await loadNotices();
+  }catch(e){toast('❌ '+e.message);}
+  finally{loading(false);}
+}
+
+// ═══════════════════════════════════════
+// 이달의 방문 랭킹 (월별 이용 횟수순)
+// ═══════════════════════════════════════
+async function loadMonthlyRanking(myMemberId){
+  try{
+    const now=new Date();
+    const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    const start=ym+'-01T00:00:00';
+    const end=new Date(now.getFullYear(),now.getMonth()+1,1).toISOString().slice(0,10)+'T00:00:00';
+    const{data}=await sb.from('usage_records').select('member_id,member_name,headcount').gte('created_at',start).lt('created_at',end).neq('member_id','').not('member_id','like','GUEST_%');
+    // 멤버별 합산
+    const map={};
+    (data||[]).forEach(r=>{
+      if(!r.member_id||r.member_id.startsWith('GUEST'))return;
+      if(!map[r.member_id])map[r.member_id]={name:r.member_name,count:0,total:0};
+      map[r.member_id].count++;
+      map[r.member_id].total+=(r.headcount||0);
+    });
+    const sorted=Object.entries(map).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+    const myRank=sorted.findIndex(([id])=>id===myMemberId)+1;
+    const medals=['🥇','🥈','🥉'];
+    const el=document.getElementById('monthly-rank-list');
+    if(!el)return;
+    if(!sorted.length){el.innerHTML='<p style="color:var(--c-sub);text-align:center;font-size:.85rem;padding:12px">이번 달 이용 기록이 없습니다</p>';return;}
+    el.innerHTML=sorted.map(([id,v],i)=>{
+      const isMe=id===myMemberId;
+      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${isMe?'linear-gradient(135deg,#FFF0E8,#FFE8E0)':'#FFFAF8'};border-radius:12px;margin-bottom:6px;border:${isMe?'2px solid var(--c-primary)':'1.5px solid #FFE4D6'}">
+        <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:900;flex-shrink:0;background:${i<3?['#FFD54F','#CFD8DC','#FFCC80'][i]:'#FFE4D6'}">${i<3?medals[i]:i+1}</div>
+        <div style="flex:1;font-size:.88rem;font-weight:700;color:var(--c-text)">${maskName(v.name)}${isMe?' 👈 나':''}</div>
+        <div style="font-size:.88rem;font-weight:900;color:var(--c-primary)">${v.total}명<span style="font-size:.72rem;color:var(--c-sub);font-weight:600;margin-left:4px">(${v.count}회)</span></div>
+      </div>`;
+    }).join('');
+    // 내 순위 따로 표시
+    if(myRank>0){
+      el.insertAdjacentHTML('beforeend',`<div style="text-align:center;font-size:.8rem;color:var(--c-primary);font-weight:700;margin-top:8px">나의 이번 달 순위: ${myRank}위 🎉</div>`);
+    }
+  }catch(e){console.error(e);}
+}
+
+// ═══════════════════════════════════════
+// 관리자 랭킹 관리
+// ═══════════════════════════════════════
+let adminRankSpace='';
+async function openRankingAdmin(spaceName){
+  adminRankSpace=spaceName;
+  const panel=document.getElementById('admin-ranking-panel');
+  const title=document.getElementById('admin-ranking-title');
+  if(panel)panel.style.display='block';
+  if(title)title.textContent=spaceEmoji(spaceName)+' '+spaceName+' 랭킹';
+  await refreshAdminRankList();
+}
+async function refreshAdminRankList(){
+  const list=document.getElementById('admin-ranking-list');
+  if(!list)return;
+  loading(true);
+  try{
+    const{data}=await sb.from('event_records').select('*').eq('space_name',adminRankSpace).order('score',{ascending:false});
+    list.innerHTML=!(data?.length)?'<p style="color:#9FA8DA;text-align:center;padding:16px">등록된 기록이 없습니다</p>':
+      data.map((r,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:12px;margin-bottom:6px;border:1.5px solid #B2EBF2">
+          <div style="min-width:24px;font-size:.9rem;font-weight:900;color:#00838F;text-align:center">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.85rem;font-weight:700;color:#00838F">${r.member_name} <span style="color:#9FA8DA;font-size:.75rem">${r.gender||''} ${r.age||''}세</span></div>
+            <div style="font-size:.75rem;color:#80CBC4">${r.score} · ${r.created_at?.slice(0,10)||''}</div>
+            ${r.memo?`<div style="font-size:.72rem;color:#9FA8DA;margin-top:2px">${r.memo}</div>`:''}
+          </div>
+          ${r.photo_url?`<img src="${r.photo_url}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0" />`:''}
+          <button onclick="openRankEdit(${JSON.stringify(r).replace(/"/g,'&quot;')})" style="padding:5px 10px;background:#E0F7FA;color:#00838F;border:none;border-radius:8px;font-size:.75rem;font-weight:700;font-family:var(--font);cursor:pointer;flex-shrink:0">수정</button>
+        </div>`).join('');
+  }catch(e){toast('❌ '+e.message);}
+  finally{loading(false);}
+}
+function openRankEdit(r){
+  document.getElementById('rank-edit-id').value=r.id;
+  document.getElementById('rank-edit-name').value=r.member_name||'';
+  document.getElementById('rank-edit-score').value=r.score||'';
+  document.getElementById('rank-edit-memo').value=r.memo||'';
+  document.getElementById('rank-edit-modal').classList.add('show');
+}
+async function saveRankEdit(){
+  const id=document.getElementById('rank-edit-id').value;
+  const name=document.getElementById('rank-edit-name').value.trim();
+  const score=document.getElementById('rank-edit-score').value.trim();
+  const memo=document.getElementById('rank-edit-memo').value.trim();
+  loading(true);
+  try{
+    await sb.from('event_records').update({member_name:name,score,memo}).eq('id',id);
+    document.getElementById('rank-edit-modal').classList.remove('show');
+    toast('✅ 수정되었습니다');
+    await refreshAdminRankList();
+  }catch(e){toast('❌ '+e.message);}
+  finally{loading(false);}
+}
+async function deleteRankEntry(){
+  const id=document.getElementById('rank-edit-id').value;
+  if(!confirm('이 항목을 삭제할까요?'))return;
+  loading(true);
+  try{
+    await sb.from('event_records').delete().eq('id',id);
+    document.getElementById('rank-edit-modal').classList.remove('show');
+    toast('🗑 삭제되었습니다');
+    await refreshAdminRankList();
+  }catch(e){toast('❌ '+e.message);}
+  finally{loading(false);}
+}
+async function resetRanking(){
+  if(!confirm(adminRankSpace+' 랭킹을 전체 초기화할까요?\n이 작업은 되돌릴 수 없습니다.'))return;
+  loading(true);
+  try{
+    await sb.from('event_records').delete().eq('space_name',adminRankSpace);
+    toast('🗑 랭킹이 초기화되었습니다');
+    await refreshAdminRankList();
+  }catch(e){toast('❌ '+e.message);}
+  finally{loading(false);}
+}
+
+// ═══════════════════════════════════════
+// 상상아울LAB 활동유형 동적 표시
+// ═══════════════════════════════════════
+async function showLabTypeModal(spaceId){
+  const sp=spacesData.find(s=>s.space_id===spaceId);
+  let types=[];
+  try{types=JSON.parse(sp?.lab_types||'[]');}catch{}
+  if(!types.length){
+    // 기본값 폴백
+    types=[{emoji:'🎨',name:'상시체험',desc:'자유 3D펜 · 드론 체험'},{emoji:'🚨',name:'기획활동',desc:'태극기 자석 만들기 등'}];
+  }
+  const list=document.getElementById('lab-type-list');
+  list.innerHTML=types.map(t=>`
+    <label onclick="selectLabFromModal('${t.name}')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2.5px solid var(--c-border);border-radius:14px;cursor:pointer;background:#FAFAFA">
+      <span style="font-size:1.6rem">${t.emoji||'🎨'}</span>
+      <div><div style="font-size:.92rem;font-weight:800;color:var(--c-text)">${t.name}</div><div style="font-size:.75rem;color:var(--c-sub);margin-top:2px">${t.desc||''}</div></div>
+    </label>`).join('');
+  document.getElementById('lab-type-modal').classList.add('show');
+}
+function selectLabFromModal(type){
+  labActivity=type;
+  document.getElementById('lab-type-modal').classList.remove('show');
+  // lab-section의 선택 UI 업데이트
+  document.getElementById('lab-selected-display').textContent='✅ '+type+' 선택됨';
+  document.getElementById('lab-selected-display').style.display='block';
+}
+
 </script>
 </body>
 </html>
